@@ -2,6 +2,8 @@
 
 This is an nginx proxy that proxies content from an S3 bucket.
 
+This was taken from 18F/
+
 The proxy has two configurable routing paths. The first path is to route all requests from a `BASE_DOMAIN` (such as `18f.gsa.gov`) to a specific path on a S3 bucket, defined by `PROXY_ROOT` (such as `http://<xxx>.s3-website-us-east-1.amazonaws.com/`).
 
 ## Configuration

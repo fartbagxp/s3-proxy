@@ -1,28 +1,33 @@
 worker_processes 1;
 pid /run/nginx.pid;
-daemon on;
 
-# Single process: handle up to 512 users at once
+# Single process: 
+# handle up to (worker_connections/2) users to account for incoming/outgoing connections
 events {
   worker_connections 1024;
 }
 
 http {
+
+  # Simple defaults for downloading files
+	default_type application/octet-stream;
+
+  # Logging: by default, off
+  access_log off;
+  error_log off;
+	# access_log /usr/local/nginx/logs/access.log;
+	# error_log  /usr/local/nginx/logs/error.log;
+
+  # Optimize sending static files and saving a copy
+  # https://thoughts.t37.net/nginx-optimization-understanding-sendfile-tcp-nodelay-and-tcp-nopush-c55cdd276765
 	sendfile on;
 	tcp_nopush on;
 	tcp_nodelay on;
+
+  # Increase the default hashtables size for server name and lookup
+  # https://gist.github.com/muhammadghazali/6c2b8c80d5528e3118613746e0041263
 	types_hash_max_size 2048;
 	server_names_hash_bucket_size 64;
-
-	include /usr/local/nginx/conf/mime.types;
-	default_type application/octet-stream;
-
-  ## Logging: do we want to log?
-  access_log off;
-  error_log off;
-
-	# access_log /usr/local/nginx/logs/access.log;
-	# error_log  /usr/local/nginx/logs/error.log;
 
   ## We probably don't want to gzip large PDFs because 
   ## they're likely to already be compressed and waste 
@@ -32,7 +37,7 @@ http {
 	# gzip_http_version 1.1;
 	# gzip_types text/plain text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript application/pdf;
 
-  ## Timeouts from https://www.digitalocean.com/community/tutorials/how-to-optimize-nginx-configuration
+  ## Timeout optimization from https://www.digitalocean.com/community/tutorials/how-to-optimize-nginx-configuration
   client_body_timeout 12;
   client_header_timeout 12;
   keepalive_timeout 15;
@@ -44,11 +49,11 @@ http {
   # proxy_cache_path /data/cache levels=1:2 keys_zone=s3cache:10m max_size=30g;
 
   server {
-    listen     8000;
+    listen $NGINX_LISTEN_PORT;
 
     location / {
       # Proxy S3 location
-      proxy_pass https://proxy-test-175397573.s3.amazonaws.com;
+      proxy_pass https://$NGINX_S3_BUCKET.s3.amazonaws.com;
 
       ## We don't need caching for this proxy
       # proxy_cache        s3cache;
@@ -62,6 +67,7 @@ http {
       # Hide these unused aws headers
       proxy_hide_header x-amz-id-2;
       proxy_hide_header x-amz-request-id;
+      proxy_hide_header x-amz-bucket-region;
       proxy_hide_header Set-Cookie;
     }
   }

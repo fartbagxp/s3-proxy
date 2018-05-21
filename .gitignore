@@ -64,5 +64,10 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-
 # End of https://www.gitignore.io/api/linux,macos,windows
+
+# Private Environment variables
+build.sh
+
+# The final configuration file with environment settings
+nginx.conf

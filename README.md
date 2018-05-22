@@ -29,6 +29,22 @@ This will generate a URL that will expire in 300 seconds.
 aws s3 presign s3://mybucket/myobject --expires-in 300
 ```
 
+### Generated keys and certs
+
+* To generate a 2048-bit private key and a self-signed certificate, simply run
+
+```sh
+openssl req -newkey rsa:2048 -nodes -keyout domain.key -x509 -days 365 -out domain.crt
+```
+
+The `domain.crt` and `domain.key` files will appear in your directory.
+
+* To generate a Diffie-Hellman (DH) key for TLS, run this.
+
+```sh
+openssl dhparam -out dhparam.pem 4096
+```
+
 ## Building the configuration
 
 There is a `build.sample.sh` script used for building the `nginx.conf` file.
@@ -57,10 +73,17 @@ Here's a quick and dirty script for testing (using port in build.sample.sh).
 
 ```sh
 sh build.sh
-docker run --name some-nginx -p 3001:8000 -v $PWD/nginx.conf:/etc/nginx/nginx.conf -d nginx:1.13.12-alpine
+docker run --name some-nginx \
+    -p 3000:80 \
+    -p 443:443 \
+    -v $PWD/nginx.conf:/etc/nginx/nginx.conf \
+    -v $PWD/domain.crt:/etc/nginx/domain.crt \
+    -v $PWD/domain.key:/etc/nginx/domain.key \
+    -v $PWD/dhparam.pem:/etc/nginx/dhparam.pem \
+    -d nginx:1.13.12-alpine
 ```
 
-At this point, you should be able to go to `localhost:3001` and get an Access Denied message.
+At this point, you should be able to go to `localhost:3000`, it'll automatically redirect you to `https://localhost`, in which if you accept your own self-signed certificate, you will get an Access Denied message.
 
-Append the resource URL from the presign URL `localhost:3001/<resource>` to get to your file.
+Append the [AWS S3](https://docs.aws.amazon.com/cli/latest/reference/s3/presign.html) resource URL from the presign URL `localhost:3000/<resource>` to get to your file.
 

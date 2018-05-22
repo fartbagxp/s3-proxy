@@ -5,5 +5,5 @@ jobs:
       - image: nginx:1.13.12-alpine
     steps:
       - checkout
-      - sh build.sample.sh
+      - run: sh build.sample.sh
       - run: nginx -t -c nginx.conf

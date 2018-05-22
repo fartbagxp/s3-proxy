@@ -1,6 +1,20 @@
 #!bin/bash
 
-export NGINX_LISTEN_PORT=8000
+export NGINX_SERVER_NAME=www.example.com
 export NGINX_S3_BUCKET=proxy-bucket
+export NGINX_SSL_CERT_PATH=/etc/nginx/domain.crt
+export NGINX_SSL_KEY_PATH=/etc/nginx/domain.key
+export NGINX_SSL_DH_PATH=/etc/nginx/dhparam.pem
+export NGINX_DNS_IP_1=8.8.8.8
+export NGINX_DNS_IP_2=8.8.8.4
 
-envsubst '${NGINX_LISTEN_PORT} ${NGINX_S3_BUCKET}' < nginx.conf.template > nginx.conf
+envsubst '${NGINX_SERVER_NAME}
+        ${NGINX_S3_BUCKET} 
+        ${NGINX_SSL_CERT_PATH} 
+        ${NGINX_SSL_KEY_PATH}
+        ${NGINX_SSL_DH_PATH}
+        ${NGINX_DNS_IP_1}
+        ${NGINX_DNS_IP_2}' \
+        < nginx.conf.template > nginx.conf
+
+        

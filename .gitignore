@@ -70,10 +70,10 @@ $RECYCLE.BIN/
 build.sh
 
 # SSL certificates
-domain.crt
-domain.csr
-domain.key
-dhparam.pem
+/domain.crt
+/domain.csr
+/domain.key
+/dhparam.pem
 
 # The final configuration file with environment settings
-nginx.conf
+/nginx.conf

@@ -16,5 +16,3 @@ envsubst '${NGINX_SERVER_NAME}
         ${NGINX_DNS_IP_1}
         ${NGINX_DNS_IP_2}' \
         < nginx.conf.template > nginx.conf
-
-        

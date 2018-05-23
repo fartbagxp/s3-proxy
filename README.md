@@ -1,3 +1,5 @@
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Build Status](https://circleci.com/gh/fartbagxp/s3-proxy.svg?style=svg)](https://circleci.com/gh/fartbagxp/s3-proxy)
+
 # Overview
 
 This is an nginx proxy that proxies large binary data (ex. PDFs) from an S3 bucket.
@@ -10,8 +12,13 @@ The proxy route all requests to a specific path on a S3 bucket, defined by `NGIN
 
 Configuration is handled by environment variables. The following variables are available:
 
-* `NGINX_LISTEN_PORT`: The port in which this nginx proxy is listening to
-* `NGINX_S3_BUCKET`: The S3 bucket URL where the the resources are stored - (ex. `http://<xxx>.s3-website-us-east-1.amazonaws.com/`).
+* `NGINX_SERVER_NAME`: The port in which this nginx proxy is listening to
+* `NGINX_S3_BUCKET`: The S3 bucket URL where the the resources are stored - (ex. `http://<xxx>.s3-website-us-east-1.amazonaws.com/`)
+* `NGINX_SSL_CERT_PATH`: The SSL certificate to identify the server
+* `NGINX_SSL_KEY_PATH`: The private key for the server for encrypting traffic between the server and client.
+* `NGINX_SSL_DH_PATH`: The Diffie–Hellman key for generating session keys for perfect forward secrecy. 
+* `NGINX_DNS_IP_1`: The primary DNS resolver to use
+* `NGINX_DNS_IP_2`: The secondary DNS resolver to use (in case the first one fails)
 
 ## Presign URL for AWS S3 resources
 
@@ -34,7 +41,7 @@ aws s3 presign s3://mybucket/myobject --expires-in 300
 * To generate a 2048-bit private key and a self-signed certificate, simply run
 
 ```sh
-openssl req -newkey rsa:2048 -nodes -keyout domain.key -x509 -days 365 -out domain.crt
+openssl req -newkey rsa:2048 -nodes -keyout config/domain.key -x509 -days 365 -out config/domain.crt
 ```
 
 The `domain.crt` and `domain.key` files will appear in your directory.
@@ -42,7 +49,7 @@ The `domain.crt` and `domain.key` files will appear in your directory.
 * To generate a Diffie-Hellman (DH) key for TLS, run this.
 
 ```sh
-openssl dhparam -out dhparam.pem 4096
+openssl dhparam -out config/dhparam.pem 4096
 ```
 
 ## Building the configuration
@@ -73,13 +80,13 @@ Here's a quick and dirty script for testing (using port in build.sample.sh).
 
 ```sh
 sh build.sh
-docker run --name some-nginx \
+docker run --name nginx-s3-proxy \
     -p 3000:80 \
     -p 443:443 \
     -v $PWD/nginx.conf:/etc/nginx/nginx.conf \
-    -v $PWD/domain.crt:/etc/nginx/domain.crt \
-    -v $PWD/domain.key:/etc/nginx/domain.key \
-    -v $PWD/dhparam.pem:/etc/nginx/dhparam.pem \
+    -v $PWD/config/domain.crt:/etc/nginx/domain.crt \
+    -v $PWD/config/domain.key:/etc/nginx/domain.key \
+    -v $PWD/config/dhparam.pem:/etc/nginx/dhparam.pem \
     -d nginx:1.13.12-alpine
 ```
 
@@ -87,3 +94,8 @@ At this point, you should be able to go to `localhost:3000`, it'll automatically
 
 Append the [AWS S3](https://docs.aws.amazon.com/cli/latest/reference/s3/presign.html) resource URL from the presign URL `localhost:3000/<resource>` to get to your file.
 
+## Troubleshooting
+
+* "SignatureDoesNotMatch" error appears in XML form:
+
+The bucket name is currently set to an non-existent bucket, so please make sure to check that environment variable before proceeding.

@@ -10,4 +10,8 @@ jobs:
       - run: docker run --name nginx-s3-proxy -p 80:80 -p 443:443 -v ${PWD}/nginx.conf:/etc/nginx/nginx.conf -v ${PWD}/config/domain.crt:/etc/nginx/domain.crt -v ${PWD}/config/domain.key:/etc/nginx/domain.key -v ${PWD}/config/dhparam.pem:/etc/nginx/dhparam.pem -d nginx:1.13.12-alpine
       - run: curl -Ssi 127.0.0.1 | grep '301 Moved Permanently'
       - run: curl -Ssi -k https://localhost | grep '403 Forbidden'
-
+      - run: echo 'export presign=$(aws s3 presign s3://$NGINX_S3_BUCKET/README.md --expires-in 60)' >> $BASH_ENV
+      - run: echo 'export url=$(echo "$presign"  | sed 's,https://$NGINX_S3_BUCKET.s3.amazonaws.com,https://localhost,g')' >> $BASH_ENV
+      - run: source $BASH_ENV
+      - run: curl -Ssi $presign | grep 'HTTP/1.1 200 OK'
+      - run: curl -Ssi --insecure $url | grep 'HTTP/1.1 200 OK'

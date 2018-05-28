@@ -8,7 +8,15 @@ Provided a S3 bucket (private or public), the proxy is used to simply re-route t
 
 The proxy route all requests to a specific path on a S3 bucket, defined by `NGINX_S3_BUCKET` (such as `http://<xxx>.s3-website-us-east-1.amazonaws.com/`).
 
-## Configuration
+## Setup
+
+To try this out locally, you should have the following:
+
+* A presigned URL for a AWS S3 resource.
+* Certificates and Keys for SSL, and a Diffie–Hellman key for forward secrecy (use the config folder ones for local development, if you're too lazy to generate one).
+* [Docker](https://www.docker.com/) (optional)
+
+### Configuration
 
 Configuration is handled by environment variables. The following variables are available:
 
@@ -20,7 +28,7 @@ Configuration is handled by environment variables. The following variables are a
 * `NGINX_DNS_IP_1`: The primary DNS resolver to use
 * `NGINX_DNS_IP_2`: The secondary DNS resolver to use (in case the first one fails)
 
-## Presign URL for AWS S3 resources
+### Presign URL for AWS S3 resources
 
 The normal use case is that a presigned URL will be generated so that the proxy does not need to know anything about authentication with AWS.
 
@@ -35,6 +43,8 @@ This will generate a URL that will expire in 300 seconds.
 ```sh
 aws s3 presign s3://mybucket/myobject --expires-in 300
 ```
+
+* Note: The maximum time you can set a [presign URL for expiration parameter](https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-query-string-auth.html) is 7 days.
 
 ### Generated keys and certs
 
@@ -52,7 +62,7 @@ The `domain.crt` and `domain.key` files will appear in your directory.
 openssl dhparam -out config/dhparam.pem 4096
 ```
 
-## Building the configuration
+### Building the configuration
 
 There is a `build.sample.sh` script used for building the `nginx.conf` file.
 
@@ -83,19 +93,19 @@ sh build.sh
 docker run --name nginx-s3-proxy \
     -p 3000:80 \
     -p 443:443 \
-    -v $PWD/nginx.conf:/etc/nginx/nginx.conf \
-    -v $PWD/config/domain.crt:/etc/nginx/domain.crt \
-    -v $PWD/config/domain.key:/etc/nginx/domain.key \
-    -v $PWD/config/dhparam.pem:/etc/nginx/dhparam.pem \
+    -v ${PWD}/nginx.conf:/etc/nginx/nginx.conf \
+    -v ${PWD}/config/domain.crt:/etc/nginx/domain.crt \
+    -v ${PWD}/config/domain.key:/etc/nginx/domain.key \
+    -v ${PWD}/config/dhparam.pem:/etc/nginx/dhparam.pem \
     -d nginx:1.13.12-alpine
 ```
 
 At this point, you should be able to go to `localhost:3000`, it'll automatically redirect you to `https://localhost`, in which if you accept your own self-signed certificate, you will get an Access Denied message.
 
-Append the [AWS S3](https://docs.aws.amazon.com/cli/latest/reference/s3/presign.html) resource URL from the presign URL `localhost:3000/<resource>` to get to your file.
+Append the [AWS S3 resource URL](https://docs.aws.amazon.com/cli/latest/reference/s3/presign.html) from the presign URL `localhost:3000/<resource>` to get to your file.
 
 ## Troubleshooting
 
-* "SignatureDoesNotMatch" error appears in XML form:
+* "SignatureDoesNotMatch" error appears as the response when you try to hit the server.
 
-The bucket name is currently set to an non-existent bucket, so please make sure to check that environment variable before proceeding.
+    The bucket name is currently set to an non-existent bucket, so please make sure to check that environment variable before proceeding.

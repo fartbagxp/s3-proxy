@@ -1,4 +1,5 @@
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Build Status](https://circleci.com/gh/fartbagxp/s3-proxy.svg?style=svg)](https://circleci.com/gh/fartbagxp/s3-proxy)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/fartbagxp/blob/master/LICENSE.md)
+[![Build Status CircleCI](https://circleci.com/gh/fartbagxp/s3-proxy.svg?style=svg)](https://circleci.com/gh/fartbagxp/s3-proxy)
 
 # Overview
 
@@ -7,6 +8,13 @@ This is an nginx proxy that proxies large binary data (ex. PDFs) from an S3 buck
 Provided a S3 bucket (private or public), the proxy is used to simply re-route the URL (via proxy_pass) to the S3 bucket resource.
 
 The proxy route all requests to a specific path on a S3 bucket, defined by `NGINX_S3_BUCKET` (such as `http://<xxx>.s3-website-us-east-1.amazonaws.com/`).
+
+For simplicity, this is one way it can look like:
+<p align="center">
+<img src="doc/proxy-s3.png" alt="nginx s3 proxy" title="nginx s3 proxy" />
+</p>
+
+AWS has a more [extensive architectural diagram](https://aws.amazon.com/answers/networking/accessing-vpc-endpoints-from-remote-networks/) of what this can look like, without a reverse proxy.
 
 ## Setup
 
@@ -103,6 +111,20 @@ docker run --name nginx-s3-proxy \
 At this point, you should be able to go to `localhost:3000`, it'll automatically redirect you to `https://localhost`, in which if you accept your own self-signed certificate, you will get an Access Denied message.
 
 Append the [AWS S3 resource URL](https://docs.aws.amazon.com/cli/latest/reference/s3/presign.html) from the presign URL `localhost:3000/<resource>` to get to your file.
+
+## Other Considerations
+
+One consideration to fetching data from a private AWS S3 bucket is to use [AWS API Gateway](https://docs.aws.amazon.com/apigateway/latest/developerguide/integrating-api-with-aws-services-s3.html) for proxying the HTTP request.
+
+The API gateway can act as either a HTTP proxy or a [AWS Lambda](https://aws.amazon.com/lambda/) proxy.
+
+It can provide a URL that can integrate a GET `https://your-api-host/stage/` request with the backend GET `https://your-s3-host/`.
+
+Managed service means scaling is done by AWS automatically.
+
+The major drawback of this approach is the [limitation of API Gateway Integration](https://docs.aws.amazon.com/apigateway/latest/developerguide/limits.html) with HTTP proxy and [AWS Lambda](https://aws.amazon.com/lambda/). The integration timeout is currently set to 30 seconds.
+
+To download a 1GB binary file, one would need to hit slightly higher than 286.4Mbps to download the file before the timeout.
 
 ## Troubleshooting
 

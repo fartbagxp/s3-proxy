@@ -14,7 +14,7 @@ For simplicity, this is one way it can look like:
 <img src="doc/proxy-s3.png" alt="nginx s3 proxy" title="nginx s3 proxy" />
 </p>
 
-AWS has a more [extensive architectural diagram](https://aws.amazon.com/answers/networking/accessing-vpc-endpoints-from-remote-networks/) of what this can look like, without a reverse proxy.
+AWS has a more [extensive architectural diagram](https://aws.amazon.com/answers/networking/accessing-vpc-endpoints-from-remote-networks/) of what this can look like.
 
 ## Setup
 
